@@ -1,70 +1,83 @@
 #!/bin/bash
+
+BLUE='\e[34m'
+GREEN='\e[32m'
+RED='\e[31m'
+WHITE='\e[37m'
+NC='\e[0m'
+
 function docker_ubuntu {
-   ( set -x; apt-get update; echo -ne "[##..................] (10%)"; apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common; ); 
-   ( set -x; echo -ne "[####................] (20%)"; curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && 
-   add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"; echo -ne "[##########..........] (50%)" && 
-   apt-get update; echo -ne "[###############.....] (75%)" && apt-get install docker-ce docker-ce-cli containerd.io && echo -ne "[####################] (100%)" && return 0 ) || return 1
+   ( set -x; apt-get update ) && echo -ne "\n${RED}[##..................] ${BLUE}(10%)${NC}\n";
+   ( set -x; apt-get --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common ) && echo -ne "\n${RED}[####................] ${BLUE}(20%)${NC}\n";
+   ( set -x; curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -y - &&
+   add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" ) && echo -ne "\n${RED}[##########..........] ${BLUE}(50%)${NC}\n";
+   ( set -x; apt-get update ) && echo -ne "\n${RED}[###############.....] ${BLUE}(75%)${NC}\n" && ( set -x; apt-get --assume-yes install docker-ce docker-ce-cli containerd.io ) && echo -ne "\n${GREEN}[####################] ${BLUE}(100%)${NC}\n" && return 0 || return 1
 }
 
 function docker_manjaro {
-   ( set -x; pacman -Syy; echo -ne "[#####...............] (25%)" &&
-   pacman -S docker && echo -ne "[####################] (100%)" && return 0 ) || return 1
+   ( set -x; pacman -Syy );
+   echo -ne "\n${RED}[#####...............] ${BLUE}(25%)${NC}\n";
+   ( set -x; pacman -S docker --noconfirm ) && echo -ne "\n${GREEN}[####################] ${BLUE}(100%)${NC}\n" && return 0 || return 1;
 }
 
 function docker_systemctl {
-   ( set -x; systemctl start docker &&
-   systemctl enable docker &&
-   echo "docker service started" && return 0 ) || ( set -x; echo "error trying to start docker service" && return 1 )
+   ( set -x; systemctl start docker && systemctl enable docker ) && echo -ne "docker service started${NC}" && return 0 || return 1;
 }
 
 function docker_service {
-   ( set -x; service docker start &&
-   service docker enable &&
-   echo "docker service started" && return 0 ) || ( set -x; echo "error trying to start docker service" && return 1 )
+   ( set -x; service docker start && service docker enable ) && echo -ne "docker service started${NC}" && return 0 || return 1;
 }
 
 function mongodb_install {
-   ( set -x; echo "Downloading mongodb docker image"; echo -ne "[#...................] (5%)";
-   docker pull mongo; echo -ne "[#########...........] (45%)" &&
-   echo "Creating directory" &&
-   mkdir -p /mongodata; echo -ne "[###############.....] (75%)";
-   echo "Running docker container";
-   docker run -it -v mongodata:/data/db -p 27017:27017 --name mongodb -d mongo && echo -ne "[####################] (100%)" && return 0 ) || return 1
+   echo -ne "${BLUE}Downloading mongodb docker image${NC}";
+   echo -ne "\n${RED}[#...................] (5%)${NC}\n";
+   ( set -x; docker pull mongo );
+   echo -ne "\n${RED}[#########...........] (45%)${NC}\n";
+   echo -ne "${BLUE}Creating directory${NC}";
+   ( set -x; mkdir -p /mongodata ) && echo -ne "\n${RED}[###############.....] ${BLUE}(75%)${NC}\n";
+   echo -ne "${BLUE}Running docker container${NC}";
+   ( set -x; docker run -it -v mongodata:/data/db -p 27017:27017 --name mongodb -d mongo ) && echo -ne "\n${GREEN}[####################] ${BLUE}(100%)${NC}\n" && return 0 || return 1;
 }
 
 function log_display {
-   echo "==================================";
-   echo "= DOCKER_INSTALLATION => $1   =";
-   echo "= DOCKER_SERVICE => $2        =";
-   echo "= MONGO_INSTALLATION => $3    =";
-   echo "=================================="
+   echo "${BLUE}==================================${NC}";
+   echo "${BLUE}= DOCKER_INSTALLATION =>${WHITE} $1   ${BLUE}=${NC}";
+   echo "${BLUE}= DOCKER_SERVICE =>${WHITE} $2        ${BLUE}=${NC}";
+   echo "${BLUE}= MONGO_INSTALLATION =>${WHITE} $3    ${BLUE}=${NC}";
+   echo "${BLUE}==================================${NC}"
 }
 
 OS=$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release)
 case $OS in
    ubuntu)
-     echo "ubuntu process"
-     echo "starting docker installation ......"
-     VALUE_DOCKER=$(if [ $(docker_ubuntu) == 0 ] ; then echo "True"; else echo "False" ; fi)
-     echo "starting service ......."
-     VALUE_SERVICE_TYPE=$(if [ $(docker_service) == 0 ] ; then echo "True"; else echo "False" ; fi)
-     echo "starting mongo installation ........"
-     VALUE_MONGO=$(if [ $(mongodb_install) == 0 ] ; then echo "True"; else echo "False" ; fi)
+     echo "${BLUE}ubuntu process${NC}"
+     echo "${BLUE}starting docker installation ......${NC}"
+     docker_ubuntu
+     VALUE_DOCKER=$(if [ $? -eq 0 ] ; then echo "True"; else echo "False" ; fi)
+     echo "${BLUE}starting service .......${NC}"
+     docker_service
+     VALUE_SERVICE_TYPE=$(if [ $? -eq 0 ] ; then echo "True"; else echo "False" ; fi)
+     echo "${BLUE}starting mongo installation ........${NC}"
+     mongodb_install
+     VALUE_MONGO=$(if [ $? -eq 0 ] ; then echo "True"; else echo "False" ; fi)
      log_display $VALUE_DOCKER $VALUE_SERVICE_TYPE $VALUE_MONGO
-     echo "Docker installation have finished"
+     echo "${BLUE}Docker installation have finished${NC}"
      ;;
    manjaro)
-     echo "manjaro process"
-     echo "starting docker installation ......"
-     VALUE_DOCKER=$(if [ $(docker_manjaro) == 0 ] ; then echo "True"; else echo "False" ; fi)
-     echo "starting service ......."
-     VALUE_SERVICE_TYPE=$(if [ $(docker_systemctl) == 0 ] ; then echo "True"; else echo "False" ; fi)
-     echo "starting mongo installation ........"
-     VALUE_MONGO=$(if [ $(mongodb_install) == 0 ] ; then echo "True"; else echo "False" ; fi)
+     echo "${BLUE}manjaro process${NC}"
+     echo "${BLUE}starting docker installation ......${NC}"
+     docker_manjaro
+     VALUE_DOCKER=$(if [ $? -eq 0 ] ; then echo "True"; else echo "False" ; fi)
+     echo "${BLUE}starting service .......${NC}"
+     docker_systemctl
+     VALUE_SERVICE_TYPE=$(if [ $? -eq 0 ] ; then echo "True"; else echo "False" ; fi)
+     echo "${BLUE}starting mongo installation ........${NC}"
+     mongodb_install
+     VALUE_MONGO=$(if [ $? -eq 0 ] ; then echo "True"; else echo "False" ; fi)
      log_display $VALUE_DOCKER $VALUE_SERVICE_TYPE $VALUE_MONGO
-     echo "Docker installation have finished"
+     echo "${BLUE}Docker installation have finished${NC}"
      ;;
    *)
-     echo "Distribution not supported"
+     echo "${RED}Distribution not supported${NC}"
      ;;
 esac
