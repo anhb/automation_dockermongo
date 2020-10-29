@@ -58,7 +58,7 @@ case $OS in
    manjaro)
      echo "manjaro process"
      echo "starting docker installation ......"
-     f [ $(docker_manjaro) == 0 ] ; then VALUE_DOCKER=True; else VALUE_DOCKER=False ; fi
+     if [ $(docker_manjaro) == 0 ] ; then VALUE_DOCKER=True; else VALUE_DOCKER=False ; fi
      echo "starting service ......."
      if [ $(docker_systemctl) == 0 ] ; then VALUE_SERVICE_TYPE=True; else VALUE_SERVICE_TYPE=False ; fi
      echo "starting mongo installation ........"
