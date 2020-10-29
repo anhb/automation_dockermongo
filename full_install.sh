@@ -40,11 +40,11 @@ function mongodb_install {
 }
 
 function log_display {
-   echo "${BLUE}==================================${NC}";
-   echo "${BLUE}= DOCKER_INSTALLATION =>${WHITE} $1   ${BLUE}=${NC}";
-   echo "${BLUE}= DOCKER_SERVICE =>${WHITE} $2        ${BLUE}=${NC}";
-   echo "${BLUE}= MONGO_INSTALLATION =>${WHITE} $3    ${BLUE}=${NC}";
-   echo "${BLUE}==================================${NC}"
+   echo "==================================";
+   echo "= DOCKER_INSTALLATION => $1   =";
+   echo "= DOCKER_SERVICE => $2        =";
+   echo "= MONGO_INSTALLATION => $3    =";
+   echo "=================================="
 }
 
 OS=$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release)
