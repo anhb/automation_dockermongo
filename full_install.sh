@@ -25,7 +25,7 @@ function docker_systemctl {
 }
 
 function docker_service {
-   ( set -x; service docker start && service docker enable ) && echo -ne "docker service started${NC}" && return 0 || return 1;
+   ( set -x; service docker start ) && echo -ne "docker service started${NC}" && return 0 || return 1;
 }
 
 function mongodb_install {
