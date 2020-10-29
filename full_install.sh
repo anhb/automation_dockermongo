@@ -34,7 +34,7 @@ function mongodb_install {
    docker run -it -v mongodata:/data/db -p 27017:27017 --name mongodb -d mongo && echo -ne "[####################] (100%)" && return 0) || return 1
 }
 
-log_display {
+function log_display {
    echo "==============================="
    echo "= DOCKER_INSTALLATION => $1   ="
    echo "= DOCKER_SERVICE => $2        ="
