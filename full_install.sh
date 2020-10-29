@@ -1,10 +1,10 @@
 #!/bin/bash
 
-BLUE='\e[34m'
-GREEN='\e[32m'
-RED='\e[31m'
-WHITE='\e[37m'
-NC='\e[0m'
+BLUE='\033[0;34m\]'
+GREEN='\033[0;32m\]'
+RED='\033[0;31m\]'
+WHITE='\033[0;37m\]'
+NC='\033[0m\]'
 
 function docker_ubuntu {
    ( set -x; apt-get update ) && echo -ne "\n${RED}[##..................] ${BLUE}(10%)${NC}\n";
